@@ -1,12 +1,7 @@
 import React, { useEffect } from "react";
 import ProductItem from "../ProductItem";
-
 import { useSelector, useDispatch } from 'react-redux';
-import { selectProducts, selectCurrentCategory, updateProducts } from '../../redux/slices/rootSlice';
-
-// import { useStoreContext } from "../../utils/GlobalState";
-// import { UPDATE_PRODUCTS } from "../../utils/actions";
-
+import { selectProducts, selectCurrentCategory, updateProducts } from '../../redux/slices/rootSlice'; // redux based actions and selectors
 import { useQuery } from '@apollo/react-hooks';
 import { QUERY_PRODUCTS } from "../../utils/queries";
 import { idbPromise } from "../../utils/helpers";
@@ -16,22 +11,13 @@ function ProductList() {
     const products = useSelector(selectProducts);
     const currentCategory = useSelector(selectCurrentCategory);
     const dispatch = useDispatch();
-
-//   const [state, dispatch] = useStoreContext();
-
-//   const { currentCategory } = state;
-
-  const { loading, data } = useQuery(QUERY_PRODUCTS);
+    const { loading, data } = useQuery(QUERY_PRODUCTS);
 
   useEffect(() => {
     // if there's data to be stored
     if(data) {
-        // let's store it in the global state object
+        // let's store it in the redux store
         dispatch(updateProducts(data.products));
-    //   dispatch({
-    //        type: UPDATE_PRODUCTS,
-    //       products: data.products
-    //     });
         // but let's also take each product and save it to IndexedDB using the helper function 
         data.products.forEach((product) => {
           idbPromise('products', 'put', product);
@@ -40,12 +26,8 @@ function ProductList() {
     } else if (!loading) { // Without internet connection
         // since we're offline, get all of the data from the `products` store
       idbPromise('products', 'get').then((products) => {
-        // use retrieved data to set global state for offline browsing
+        // use retrieved data to set redux store for offline browsing
         dispatch(updateProducts(products));
-    //     dispatch({
-    //       type: UPDATE_PRODUCTS,
-    //      products: products
-    //    });
       });
     }
   }, [data, loading, dispatch]);
@@ -53,11 +35,9 @@ function ProductList() {
   function filterProducts() {
     if (!currentCategory) {
         return products;
-        // return state.products;
     }
 
     return products.filter(product => product.category._id === currentCategory);
-    // return state.products.filter(product => product.category._id === currentCategory);
   }
 
   return (

@@ -1,20 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from '@apollo/react-hooks';
-
 import Cart from "../components/Cart";
-
 import { useSelector, useDispatch } from 'react-redux';
-import { selectProducts, selectCart, removeFromCart, updateCartQuantity, addToCart, updateProducts } from '../redux/slices/rootSlice';
-
-// import { useStoreContext } from "../utils/GlobalState";
-// import {
-//   REMOVE_FROM_CART,
-//   UPDATE_CART_QUANTITY,
-//   ADD_TO_CART,
-//   UPDATE_PRODUCTS,
-// } from "../utils/actions";
-
+import { 
+    selectProducts, 
+    selectCart, 
+    removeFromCart, 
+    updateCartQuantity, 
+    addToCart, 
+    updateProducts 
+} from '../redux/slices/rootSlice'; // redux based actions and selectors
 import { QUERY_PRODUCTS } from "../utils/queries";
 import { idbPromise } from "../utils/helpers";
 import spinner from '../assets/spinner.gif'
@@ -22,15 +18,10 @@ import spinner from '../assets/spinner.gif'
 function Detail() {
     const products = useSelector(selectProducts);
     const cart = useSelector(selectCart);
-    const dispatch = useDispatch();
-    
-    //   const [state, dispatch] = useStoreContext();
-    
+    const dispatch = useDispatch();    
     const { id } = useParams();
     const [currentProduct, setCurrentProduct] = useState({});
     const { loading, data } = useQuery(QUERY_PRODUCTS);
-
-    // const { products, cart } = state;
 
     useEffect(() => {
         // already in global store
@@ -40,10 +31,6 @@ function Detail() {
         // retrieved from server
         else if (data) {
             dispatch(updateProducts(data.products));
-            // dispatch({
-            //     type: UPDATE_PRODUCTS,
-            //     products: data.products
-            // });
 
             data.products.forEach((product) => {
                 idbPromise('products', 'put', product);
@@ -53,10 +40,6 @@ function Detail() {
         else if (!loading) {
             idbPromise('products', 'get').then((indexedProducts) => {
                 dispatch(updateProducts(indexedProducts));
-                // dispatch({
-                //     type: UPDATE_PRODUCTS,
-                //     products: indexedProducts
-                // });
             });
         }
     }, [products, data, loading, dispatch, id]);
@@ -68,31 +51,20 @@ function Detail() {
                 _id: id,
                 purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
             }));
-            // dispatch({
-            //     type: UPDATE_CART_QUANTITY,
-            //     _id: id,
-            //     purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
-            // });
+            
             idbPromise('cart', 'put', {
                 ...itemInCart,
                 purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
             });
         } else {
             dispatch(addToCart({ ...currentProduct, purchaseQuantity: 1 }));
-            // dispatch({
-            //     type: ADD_TO_CART,
-            //     product: { ...currentProduct, purchaseQuantity: 1 }
-            // });
+            
             idbPromise('cart', 'put', { ...currentProduct, purchaseQuantity: 1 });
         }
     }
 
     const removeItemFromCart = () => {
         dispatch(removeFromCart(currentProduct._id));
-        // dispatch({
-        //     type: REMOVE_FROM_CART,
-        //     _id: currentProduct._id
-        // });
 
         idbPromise('cart', 'delete', { ...currentProduct });
     };
